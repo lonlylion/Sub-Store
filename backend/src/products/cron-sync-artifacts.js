@@ -13,10 +13,8 @@ import { findByName } from '@/utils/database';
 !(async function () {
     let arg;
     if (typeof $argument != 'undefined') {
-        arg = Object.fromEntries(
-            // eslint-disable-next-line no-undef
-            $argument.split('&').map((item) => item.split('=')),
-        );
+        // eslint-disable-next-line no-undef
+        arg = parseArgument($argument);
     } else {
         arg = {};
     }
@@ -44,9 +42,32 @@ import { findByName } from '@/utils/database';
         if (!artifacts || artifacts.length === 0) return;
 
         const shouldSync = artifacts.some((artifact) => artifact.sync);
-        if (shouldSync) await doSync();
+        if (shouldSync) await doSync(arg);
     }
 })().finally(() => $.done());
+
+function parseArgument(rawArgument) {
+    if (rawArgument == null) return {};
+    if (typeof rawArgument === 'object') return rawArgument;
+    return Object.fromEntries(
+        `${rawArgument}`
+            .split('&')
+            .filter(Boolean)
+            .map((item) => {
+                const [key, ...value] = item.split('=');
+                return [key, value.join('=')];
+            }),
+    );
+}
+
+function isTruthyArgument(value, defaultValue = true) {
+    if (value == null || value === '') return defaultValue;
+    const normalized = `${value}`
+        .trim()
+        .replace(/^["']|["']$/g, '')
+        .toLowerCase();
+    return !['false', '0', 'no', 'off'].includes(normalized);
+}
 
 async function produceArtifacts(names, type) {
     try {
@@ -70,7 +91,8 @@ async function produceArtifacts(names, type) {
         $.error(`produceArtifacts error: ${e.message ?? e}`);
     }
 }
-async function doSync() {
+async function doSync(arg = {}) {
+    const syncSuccessNotify = isTruthyArgument(arg.sync_success_notify);
     console.log(
         `
 ┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅
@@ -241,8 +263,8 @@ async function doSync() {
                 '🌍 Sub-Store',
                 `同步配置成功 ${valid.length} 个, 失败 ${invalid.length} 个, 详情请查看日志`,
             );
-        } else {
-            // $.notify('🌍 Sub-Store', '同步配置完成');
+        } else if (syncSuccessNotify) {
+            $.notify('🌍 Sub-Store', '同步配置完成');
         }
     } catch (e) {
         $.notify('🌍 Sub-Store', '同步配置失败', `原因：${e.message ?? e}`);
