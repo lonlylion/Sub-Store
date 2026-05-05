@@ -127,6 +127,7 @@ function operator(proxies = [], targetPlatform, context) {
   // $.info(statusCode)
   // $.info(body)
   // const obj = JSON.parse(body)
+
   // scriptResourceCache 缓存
   // 可参考 https://t.me/zhetengsha/1003
   // const cache = scriptResourceCache
@@ -171,6 +172,8 @@ function operator(proxies = [], targetPlatform, context) {
   // async function operator() {
   //     scriptResourceCache._cleanup(undefined, 1 * 3600 * 1000);
   // }
+
+  // DOMAIN_RESOLVERS 为内置域名解析, 详见 backend/src/core/proxy-utils/processors/index.js
 
   // ProxyUtils 为节点处理工具
   // 可参考 https://t.me/zhetengsha/1066
